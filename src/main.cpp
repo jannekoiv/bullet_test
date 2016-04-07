@@ -14,7 +14,8 @@ Box *box = nullptr;
 Camera camera;
 
 int initOpengl() {
-    window = SDL_CreateWindow("Hello world!", 100, 100, 800, 600, SDL_WINDOW_OPENGL);
+    window = SDL_CreateWindow("Hello world!", 0, 0, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
+    SDL_GL_SetSwapInterval(1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
@@ -31,6 +32,7 @@ int init() {
 }
 
 float angle = 0;
+
 int draw() {
     glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -55,43 +57,32 @@ int run() {
     int prevMouseY = 0;
     float angle = 0;
     while (loop) {
-        while (SDL_PollEvent(&event)) {
-            SDL_GetMouseState(&mouseX, &mouseY);
-            if (event.type == SDL_KEYDOWN) {
-                switch (event.key.keysym.sym) {
-                    case SDLK_ESCAPE:
-                        loop = false;
-                        break;
-                    case SDLK_a:
-                        camera.moveLeftRight(-0.1f);
-                        break;
-                    case SDLK_d:
-                        camera.moveLeftRight(0.1f);
-                        break;
-                    case SDLK_w:
-                        camera.moveForwardBackward(0.1f);
-                        break;
-                    case SDLK_s:
-                        camera.moveForwardBackward(-0.1f);
-                        break;
-                    case SDLK_r:
-                        camera.moveUpDown(0.1f);
-                        break;
-                    case SDLK_f:
-                        camera.moveUpDown(-0.1f);
-                        break;
-                    case SDLK_j:
-                        angle -= 0.05f;
-                        break;
-                    case SDLK_k:
-                        angle += 0.05f;
-                        break;
-                    default:
-                        break;
-                }
-            }
+        SDL_PollEvent(NULL);
+        const Uint8 *keyState = SDL_GetKeyboardState(nullptr);
+        if (keyState[SDL_SCANCODE_ESCAPE]) {
+            loop = false;
         }
-//        angle = mouseX / 100.f;
+        if (keyState[SDL_SCANCODE_A]) {
+            camera.moveLeftRight(-0.1f);
+        }
+        if (keyState[SDL_SCANCODE_D]) {
+            camera.moveLeftRight(0.1f);
+        }
+        if (keyState[SDL_SCANCODE_W]) {
+            camera.moveForwardBackward(0.1f);
+        }
+        if (keyState[SDL_SCANCODE_S]) {
+            camera.moveForwardBackward(-0.1f);
+        }
+        if (keyState[SDL_SCANCODE_R]) {
+            camera.moveUpDown(0.1f);
+        }
+        if (keyState[SDL_SCANCODE_F]) {
+            camera.moveUpDown(-0.1f);
+        }
+
+        SDL_GetMouseState(&mouseX, &mouseY);
+        angle = mouseX / 100.f;
         camera.update(angle);
         draw();
         prevMouseX = mouseX;
