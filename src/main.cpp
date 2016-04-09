@@ -1,44 +1,64 @@
 #include <iostream>
 #include <SDL2/SDL.h>
-#include <fstream>
-#include <sstream>
-#include <bullet/btBulletDynamicsCommon.h>
-#include "Box.h"
-#include "Camera.h"
+#include "box.h"
+#include "camera.h"
 
 using namespace std;
 
 SDL_Window *window = nullptr;
 SDL_GLContext context = nullptr;
-Box *box = nullptr;
+Box *objects[10];
 Camera camera;
 
 int initOpengl() {
-    window = SDL_CreateWindow("Hello world!", 0, 0, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
+//    window = SDL_CreateWindow("Hello world!", 0, 0, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
+    window = SDL_CreateWindow("Hello world!", 0, 0, 1280, 720, SDL_WINDOW_OPENGL);
     SDL_GL_SetSwapInterval(1);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     context = SDL_GL_CreateContext(window);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
     glewInit();
+
+    glClearColor(0.0, 0.0, 0.0, 1.0);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_GREATER);
+    glClearDepth(0.0f);
+
     return 0;
 }
 
 int init() {
     initOpengl();
-    box = new Box();
+
+    float tmp = 0.0f;
+    for (int i = 0; i < 5; i += 1) {
+        objects[i] = new Box();
+        objects[i]->worldMatrix = glm::translate(glm::vec3(-2.0f, 0.0f, tmp));
+        tmp += 3.0f;
+    }
+
+    tmp = 0.0f;
+    for (int i = 5; i < 10; i += 1) {
+        objects[i] = new Box();
+        objects[i]->worldMatrix = glm::translate(glm::vec3(2.0f, 0.0f, tmp));
+        tmp += 3.0f;
+    }
+
     return 0;
 }
 
 float angle = 0;
 
 int draw() {
-    glClearColor(0.0, 0.0, 0.0, 1.0);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    box->worldMatrix = glm::translate(glm::vec3(0.0f, 0.0f, 0.0f));
-    box->draw();
+    for (int i = 0; i < 10; i += 1) {
+        objects[i]->draw(camera.position, camera.viewMatrix, camera.projectionMatrix);
+    }
 
 //    box->worldMatrix = glm::translate(glm::vec3(-10.0f, 0.0f, 0.0f));
 //    box->worldMatrix = glm::scale(box->worldMatrix, glm::vec3(0.5f, 0.5f, 0.5f));
@@ -81,8 +101,8 @@ int run() {
             camera.moveUpDown(-0.1f);
         }
 
-        SDL_GetMouseState(&mouseX, &mouseY);
-        angle = mouseX / 100.f;
+        SDL_GetRelativeMouseState(&mouseX, &mouseY);
+        angle += mouseX / 100.f;
         camera.update(angle);
         draw();
         prevMouseX = mouseX;

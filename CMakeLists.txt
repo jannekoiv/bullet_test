@@ -4,7 +4,7 @@ project(bullet_test)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-set(SOURCE_FILES src/main.cpp src/Box.cpp include/Box.h src/Camera.cpp include/Camera.h)
+set(SOURCE_FILES src/main.cpp src/box.cpp include/box.h src/camera.cpp include/camera.h src/model.cpp include/model.h src/sphere.cpp include/sphere.h)
 add_executable(bullet_test ${SOURCE_FILES})
 
 INCLUDE(FindPkgConfig)
