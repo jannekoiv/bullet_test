@@ -13,6 +13,8 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtx/random.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 
 class Model {
 public:

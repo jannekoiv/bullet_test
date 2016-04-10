@@ -1,6 +1,7 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include "box.h"
+#include "sphere.h"
 #include "camera.h"
 
 using namespace std;
@@ -8,6 +9,7 @@ using namespace std;
 SDL_Window *window = nullptr;
 SDL_GLContext context = nullptr;
 Box *objects[10];
+Sphere *sphere = nullptr;
 Camera camera;
 
 int initOpengl() {
@@ -23,8 +25,8 @@ int initOpengl() {
     glewInit();
 
     glClearColor(0.0, 0.0, 0.0, 1.0);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_DEPTH_TEST);
+//    glEnable(GL_CULL_FACE);
+//    glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_GREATER);
     glClearDepth(0.0f);
 
@@ -41,13 +43,8 @@ int init() {
         tmp += 3.0f;
     }
 
-    tmp = 0.0f;
-    for (int i = 5; i < 10; i += 1) {
-        objects[i] = new Box();
-        objects[i]->worldMatrix = glm::translate(glm::vec3(2.0f, 0.0f, tmp));
-        tmp += 3.0f;
-    }
-
+    sphere = new Sphere();
+    sphere->worldMatrix = glm::translate(glm::vec3(0.0f, 2.0f, 0.0f));
     return 0;
 }
 
@@ -56,13 +53,13 @@ float angle = 0;
 int draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    for (int i = 0; i < 10; i += 1) {
-        objects[i]->draw(camera.position, camera.viewMatrix, camera.projectionMatrix);
+    for (int i = 0; i < 5; i += 1) {
+//        objects[i]->draw(camera.position, camera.viewMatrix, camera.projectionMatrix);
     }
+//    sphere->worldMatrix = glm::rotate(angle, glm::vec3(0.0f, 1.0f, 0.0f));
+    sphere->draw(camera.position, camera.viewMatrix, camera.projectionMatrix);
 
-//    box->worldMatrix = glm::translate(glm::vec3(-10.0f, 0.0f, 0.0f));
-//    box->worldMatrix = glm::scale(box->worldMatrix, glm::vec3(0.5f, 0.5f, 0.5f));
-//    box->draw();
+
 
     SDL_GL_SwapWindow(window);
     angle += 0.01f;

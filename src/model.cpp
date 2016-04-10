@@ -52,8 +52,8 @@ GLuint Model::shaderFromFile(int type, std::string filename) {
 GLuint Model::programFromShaders(int vertexShader, int fragmentShader) {
     int program = glCreateProgram();
     glBindAttribLocation(program, 0, "inPosition");
-    glBindAttribLocation(program, 1, "inColor");
-    glBindAttribLocation(program, 2, "inNormal");
+    glBindAttribLocation(program, 1, "inNormal");
+    glBindAttribLocation(program, 2, "inColor");
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
     glLinkProgram(program);
@@ -73,7 +73,6 @@ GLuint Model::createVertexBuffer(GLfloat *vertices) {
     glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * 24, vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(0);
     return vertexBuffer;
 }
 
@@ -82,7 +81,7 @@ GLuint Model::createNormalBuffer(GLfloat *normals) {
     glGenBuffers(1, &normalBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 3 * 24, normals, GL_STATIC_DRAW);
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(2);
     return normalBuffer;
 }
@@ -92,7 +91,7 @@ GLuint Model::createColorBuffer(GLfloat *colors) {
     glGenBuffers(1, &colorBuffer);
     glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * 4 * 24, colors, GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(1);
     return colorBuffer;
 }
@@ -106,11 +105,25 @@ GLuint Model::createIndexBuffer(GLushort *indices) {
 }
 
 int Model::draw(glm::vec3 &lightPosition, glm::mat4 &viewMatrix, glm::mat4 &projectionMatrix) {
+    glUseProgram(shaderProgram);
+
     glUniformMatrix4fv(glMatWorld, 1, GL_FALSE, &worldMatrix[0][0]);
     glUniformMatrix4fv(Model::glMatView, 1, GL_FALSE, &viewMatrix[0][0]);
     glUniformMatrix4fv(Model::glMatProjection, 1, GL_FALSE, &projectionMatrix[0][0]);
     glUniform3fv(Model::glLightPosition, 1, &lightPosition[0]);
-    glUseProgram(shaderProgram);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, normalBuffer);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(1);
+
+    glBindBuffer(GL_ARRAY_BUFFER, colorBuffer);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(2);
+
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_SHORT, 0);
 }

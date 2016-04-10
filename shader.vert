@@ -19,6 +19,9 @@ void main(void) {
     vec3 directionToLight = normalize(lightPosition - worldPosition.xyz);
     float magnitude = clamp(dot(normal, directionToLight), 0.0, 1.0);
 
-    color = inColor * magnitude;
+//    color = inColor * magnitude;
+    color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+
     gl_Position = matProjection * matView * worldPosition;
+    gl_PointSize = 10.0;
 }
