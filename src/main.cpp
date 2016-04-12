@@ -1,16 +1,18 @@
 #include <iostream>
 #include <SDL2/SDL.h>
-#include "box.h"
-#include "sphere.h"
+#include <node.h>
+#include <object.h>
 #include "camera.h"
+#include "mesh.h"
 
 using namespace std;
 
 SDL_Window *window = nullptr;
 SDL_GLContext context = nullptr;
-Box *objects[10];
-Sphere *sphere = nullptr;
 Camera camera;
+Mesh *meshes = nullptr;
+Object *objects = nullptr;
+int objectCount = 0;
 
 int initOpengl() {
 //    window = SDL_CreateWindow("Hello world!", 0, 0, 1920, 1080, SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
@@ -25,44 +27,72 @@ int initOpengl() {
     glewInit();
 
     glClearColor(0.0, 0.0, 0.0, 1.0);
-//    glEnable(GL_CULL_FACE);
-//    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_GREATER);
-    glClearDepth(0.0f);
-
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_DEPTH_TEST);
+    glClearDepth(1.0f);
     return 0;
 }
+
+
+int readMesh() {
+    std::ifstream ifstream("testmodel_2.3d", ios::in | ios::binary);
+
+    int magicId = 0;
+    ifstream.read((char *) &magicId, sizeof(int));
+
+    int version = 0;
+    ifstream.read((char *) &version, sizeof(int));
+
+    int meshCount = 0;
+    ifstream.read((char *) &meshCount, sizeof(int));
+    meshes = new Mesh[meshCount];
+    for (int i = 0; i < meshCount; i++) {
+        meshes[i].readFromFile(ifstream);
+    }
+
+    ifstream.read((char *) &objectCount, sizeof(int));
+    objects = new Object[objectCount];
+    for (int i = 0; i < objectCount; i++) {
+        int parentId = 0;
+        ifstream.read((char *) &parentId, sizeof(int));
+        ifstream.read((char *) &objects[i].worldMatrix, sizeof(glm::mat4));
+        int meshId = 0;
+        ifstream.read((char *) &meshId, sizeof(int));
+        if (meshId >= 0) {
+            objects[i].mesh = &meshes[meshId];
+        }
+    }
+
+    ifstream.close();
+    return 0;
+}
+
 
 int init() {
     initOpengl();
-
-    float tmp = 0.0f;
-    for (int i = 0; i < 5; i += 1) {
-        objects[i] = new Box();
-        objects[i]->worldMatrix = glm::translate(glm::vec3(-2.0f, 0.0f, tmp));
-        tmp += 3.0f;
-    }
-
-    sphere = new Sphere();
-    sphere->worldMatrix = glm::translate(glm::vec3(0.0f, 2.0f, 0.0f));
+    readMesh();
     return 0;
 }
 
-float angle = 0;
+int clean() {
+    delete[] meshes;
+    delete[] objects;
+    SDL_GL_DeleteContext(context);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+    return 0;
+}
 
 int draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    for (int i = 0; i < 5; i += 1) {
-//        objects[i]->draw(camera.position, camera.viewMatrix, camera.projectionMatrix);
+    glm::mat4 worldMatrix;
+
+    for (int i = 0; i < objectCount; i++) {
+        objects[i].draw(camera.position, camera.viewMatrix, camera.projectionMatrix);
     }
-//    sphere->worldMatrix = glm::rotate(angle, glm::vec3(0.0f, 1.0f, 0.0f));
-    sphere->draw(camera.position, camera.viewMatrix, camera.projectionMatrix);
-
-
 
     SDL_GL_SwapWindow(window);
-    angle += 0.01f;
 }
 
 int run() {
@@ -73,34 +103,47 @@ int run() {
     int prevMouseX = 0;
     int prevMouseY = 0;
     float angle = 0;
+    float tiltAngle = 0;
+    float velocity = 1.0f;
     while (loop) {
         SDL_PollEvent(NULL);
         const Uint8 *keyState = SDL_GetKeyboardState(nullptr);
         if (keyState[SDL_SCANCODE_ESCAPE]) {
             loop = false;
         }
+        if (keyState[SDL_SCANCODE_LSHIFT]) {
+            velocity = 0.1f;
+        } else {
+            velocity = 1.0f;
+        }
         if (keyState[SDL_SCANCODE_A]) {
-            camera.moveLeftRight(-0.1f);
+            camera.moveLeftRight(-velocity);
         }
         if (keyState[SDL_SCANCODE_D]) {
-            camera.moveLeftRight(0.1f);
+            camera.moveLeftRight(velocity);
         }
         if (keyState[SDL_SCANCODE_W]) {
-            camera.moveForwardBackward(0.1f);
+            camera.moveForwardBackward(-velocity);
         }
         if (keyState[SDL_SCANCODE_S]) {
-            camera.moveForwardBackward(-0.1f);
+            camera.moveForwardBackward(velocity);
         }
         if (keyState[SDL_SCANCODE_R]) {
-            camera.moveUpDown(0.1f);
+            camera.moveUpDown(velocity);
         }
         if (keyState[SDL_SCANCODE_F]) {
-            camera.moveUpDown(-0.1f);
+            camera.moveUpDown(-velocity);
+        }
+        if (keyState[SDL_SCANCODE_T]) {
+            tiltAngle += 0.01f;
+        }
+        if (keyState[SDL_SCANCODE_G]) {
+            tiltAngle -= 0.01f;
         }
 
         SDL_GetRelativeMouseState(&mouseX, &mouseY);
         angle += mouseX / 100.f;
-        camera.update(angle);
+        camera.update(angle, tiltAngle);
         draw();
         prevMouseX = mouseX;
         prevMouseY = mouseY;
@@ -111,7 +154,7 @@ int run() {
 int main() {
     init();
     run();
-    SDL_Quit();
+    clean();
     return 0;
 }
 

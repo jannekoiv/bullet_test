@@ -1,8 +1,9 @@
 #version 120
 
 attribute vec3 inPosition;
-attribute vec4 inColor;
 attribute vec3 inNormal;
+attribute vec2 inTextureCoordinate;
+attribute vec4 inColor;
 
 uniform mat4 matWorld;
 uniform mat4 matView;
@@ -20,7 +21,8 @@ void main(void) {
     float magnitude = clamp(dot(normal, directionToLight), 0.0, 1.0);
 
 //    color = inColor * magnitude;
-    color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+    color = vec4(inTextureCoordinate.x, inTextureCoordinate.y, 1.0, 1.0) * magnitude;
+
 
     gl_Position = matProjection * matView * worldPosition;
     gl_PointSize = 10.0;

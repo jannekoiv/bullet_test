@@ -14,12 +14,13 @@
 class Camera {
 public:
     Camera();
-    int update(float angle);
+    int update(float angle, float tiltAngle);
     int moveLeftRight(float velocity);
     int moveForwardBackward(float velocity);
     int moveUpDown(float velocity);
 
     glm::vec3 position;
+    glm::mat4 worldMatrix;
     glm::mat4 viewMatrix;
     glm::mat4 projectionMatrix;
 };
